@@ -17,9 +17,14 @@ contract Web3RSVP {
         address creatorAddress,
         uint256 eventTimestamp,
         uint256 maxCapacity,
+        uint256 eventCost,
         uint256 deposit,
-        string eventDataCID
+        string eventDataCID,
+        bool isDisabled 
     );
+
+
+    event DisableEvent(bytes32 eventID, bool isDisabled); // To hide an event
 
     event NewRSVP(bytes32 eventID, address attendeeAddress);
 
@@ -35,9 +40,11 @@ contract Web3RSVP {
         uint256 eventTimestamp;
         uint256 deposit;
         uint256 maxCapacity;
+        uint256 eventCost;
         address[] confirmedRSVPs;
         address[] claimedRSVPs;
         bool paidOut;
+        bool isDisabled;
     }
 
     // Because we want our contract to be able to handle the creation of multiple events, we need a mechanism to store and easily look up events by some identifier, like a unique ID. This is what we will use to tell our program which event a user is RSVPing to, since we can assume there will be many. To do this, we can create a Solidity mapping that maps, or defines a relationship with, a unique eventID to the struct we just defined that is associated with that event. We’ll use this mapping to make sure we are referencing the correct event when we call functions on that event like RSVPing, confirming attendees, etc. Inside of our contract and under our struct, we'll define this mapping.
@@ -57,6 +64,7 @@ contract Web3RSVP {
         uint256 eventTimestamp,
         uint256 deposit,
         uint256 maxCapacity,
+        uint256 eventCost,
         string calldata eventDataCID
     ) external {
         // generate an eventID based on other things passed in to generate a hash
@@ -84,8 +92,10 @@ contract Web3RSVP {
             eventTimestamp,
             deposit,
             maxCapacity,
+            eventCost,
             confirmedRSVPs,
             claimedRSVPs,
+            false,
             false
         );
 
@@ -104,9 +114,19 @@ contract Web3RSVP {
             eventTimestamp,
             maxCapacity,
             deposit,
-            eventDataCID
+            eventCost,
+            eventDataCID,
+            false
         );
     }
+
+
+  function disableEvent(bytes32 eventId) external {
+        CreateEvent memory myEvent = idToEvent[eventId];
+        require(msg.sender == myEvent.eventOwner, "NOT AUTHORIZED");
+        myEvent.isDisabled = true;
+        emit DisableEvent(eventId, true);
+  }
 
     // the function that gets called when a user finds an event and RSVPs to it on the front end. Reminder of the requirements for a function to allow users to RSVP to an event:
     // Pass in a unique event ID the user wishes to RSVP to

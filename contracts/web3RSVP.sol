@@ -113,13 +113,12 @@ contract Web3RSVP {
             msg.sender,
             eventTimestamp,
             maxCapacity,
-            deposit,
             eventCost,
+            deposit,
             eventDataCID,
             false
         );
     }
-
 
   function disableEvent(bytes32 eventId) external {
         CreateEvent memory myEvent = idToEvent[eventId];
